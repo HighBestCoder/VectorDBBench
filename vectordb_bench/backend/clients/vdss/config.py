@@ -43,20 +43,20 @@ class VDSSIndexConfig(BaseModel, DBCaseConfig):
     def parse_metric(self) -> str:
         """Convert MetricType to VDSS distance metric string"""
         if self.metric_type == MetricType.L2:
-            return "euclidean"
+            return "l2"
         elif self.metric_type == MetricType.COSINE:
             return "cosine"
         elif self.metric_type == MetricType.IP:
             return "dot"
-        return "cosine"
+        return "l2"
     
     def parse_index_type(self) -> str:
         """Convert IndexType to VDSS index type string"""
         if self.index_type == IndexType.HNSW:
-            return "vsag_hnsw"
+            return "hnsw"
         elif self.index_type in [IndexType.Hologres_HGraph]:
-            return "vsag_hgraph"
-        return "vsag_hnsw"
+            return "hgraph"
+        return "hnsw"
     
     def index_param(self) -> dict:
         """Return index building parameters"""

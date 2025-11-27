@@ -5,11 +5,18 @@ from ..api import DBCaseConfig, DBConfig, MetricType
 
 class QdrantLocalConfig(DBConfig):
     url: SecretStr
+    grpc_port: int | None = None  # Optional gRPC port
+    prefer_grpc: bool = False  # Whether to prefer gRPC over HTTP
 
     def to_dict(self) -> dict:
-        return {
+        config = {
             "url": self.url.get_secret_value(),
         }
+        if self.grpc_port is not None:
+            config["grpc_port"] = self.grpc_port
+        if self.prefer_grpc:
+            config["prefer_grpc"] = self.prefer_grpc
+        return config
 
 
 class QdrantLocalIndexConfig(BaseModel, DBCaseConfig):

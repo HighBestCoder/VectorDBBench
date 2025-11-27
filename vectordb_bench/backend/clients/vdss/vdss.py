@@ -96,10 +96,14 @@ class VDSS(VectorDB):
                 except Exception as e:
                     log.debug(f"Collection deletion failed (may not exist): {e}")
             
-            # Create collection configuration
-            index_config = {
-                "m": self.case_config.m,
-                "ef_construction": self.case_config.ef_construction,
+            # Create collection configuration matching test_vdss_simple.py
+            config_json_dict = {
+                "dtype": "float32",
+                "metric_type": self.case_config.parse_metric(),
+                "hnsw": {
+                    "max_degree": self.case_config.m,
+                    "ef_construction": self.case_config.ef_construction,
+                }
             }
             
             config = vdss_types_pb2.CollectionConfig(
@@ -107,7 +111,7 @@ class VDSS(VectorDB):
                 storage_type=self.case_config.storage_type,
                 dimension=dim,
                 distance_metric=self.case_config.parse_metric(),
-                config_json=json.dumps(index_config),
+                config_json=json.dumps(config_json_dict),
             )
             
             # Create collection

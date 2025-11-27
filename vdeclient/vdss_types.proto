@@ -1,0 +1,61 @@
+// ============================================================================
+// VDSS Common Types - vdss_types.proto
+// ============================================================================
+//
+// Data types mapping VDE C API to Protocol Buffers
+// Based on vde.h C API definitions
+//
+// ============================================================================
+
+syntax = "proto3";
+
+package vdss;
+
+// Vector data
+message Vector {
+    repeated float data = 1;     // Vector values
+    uint32 dimension = 2;        // Vector dimension
+}
+
+// Payload (metadata in JSON format, matching VDEPayload)
+message Payload {
+    string json = 1;             // Payload in JSON format
+}
+
+// Collection configuration (matching VDECollectionConfig)
+message CollectionConfig {
+    string index_type = 1;       // "vsag_hnsw", "vsag_hgraph", etc.
+    string storage_type = 2;     // "zendb", "lmdb", etc.
+    uint32 dimension = 3;        // Vector dimension
+    string distance_metric = 4;  // "cosine", "euclidean", "dot"
+    string config_json = 5;      // Driver-specific config (JSON format)
+}
+
+// Search result (matching VDESearchResult)
+message SearchResult {
+    uint64 offset = 1;           // PointOffset (internal ID)
+    float score = 2;             // Similarity score
+}
+
+// Collection state (matching VDECollectionState)
+enum CollectionState {
+    READY = 0;
+    REBUILDING = 1;
+    ERROR = 2;
+}
+
+// Collection statistics (matching VDECollectionStats)
+message CollectionStats {
+    uint64 total_vectors = 1;
+    uint64 indexed_vectors = 2;
+    uint64 deleted_vectors = 3;
+    uint64 storage_bytes = 4;
+    uint64 index_memory_bytes = 5;
+}
+
+// Status response
+message Status {
+    int32 code = 1;              // 0 = success, negative = error
+    string message = 2;          // Error message if code != 0
+}
+

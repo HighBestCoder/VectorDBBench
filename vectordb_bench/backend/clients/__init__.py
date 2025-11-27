@@ -56,6 +56,7 @@ class DB(Enum):
     AliSQL = "AlibabaCloudRDSMySQL"
     Doris = "Doris"
     TurboPuffer = "TurpoBuffer"
+    VDSS = "VDSS"
 
     @property
     def init_cls(self) -> type[VectorDB]:  # noqa: PLR0911, PLR0912, C901, PLR0915
@@ -227,6 +228,11 @@ class DB(Enum):
             from .alisql.alisql import AliSQL
 
             return AliSQL
+
+        if self == DB.VDSS:
+            from .vdss.vdss import VDSS
+
+            return VDSS
 
         msg = f"Unknown DB: {self.name}"
         raise ValueError(msg)
@@ -402,6 +408,11 @@ class DB(Enum):
 
             return AliSQLConfig
 
+        if self == DB.VDSS:
+            from .vdss.config import VDSSConfig
+
+            return VDSSConfig
+
         msg = f"Unknown DB: {self.name}"
         raise ValueError(msg)
 
@@ -550,6 +561,11 @@ class DB(Enum):
             from .turbopuffer.config import TurboPufferIndexConfig
 
             return TurboPufferIndexConfig
+
+        if self == DB.VDSS:
+            from .vdss.config import VDSSIndexConfig
+
+            return VDSSIndexConfig
 
         # DB.Pinecone, DB.Chroma, DB.Redis
         return EmptyDBCaseConfig

@@ -63,8 +63,9 @@ class VDSS(VectorDB):
         self.dim = dim
         self.with_scalar_labels = with_scalar_labels
         
-        # Get batch size from NUM_PER_BATCH environment variable, default to 100000
-        self.batch_size = int(os.environ.get('NUM_PER_BATCH', 100000))
+        # Get batch size from NUM_PER_BATCH environment variable, default to 10000
+        # Note: For 768-dim vectors, 10000 vectors ≈ 30MB, safe for 100MB gRPC limit
+        self.batch_size = int(os.environ.get('NUM_PER_BATCH', 10000))
         log.info(f"VDSS batch_size set to: {self.batch_size}")
         
         self._primary_field = "pk"
@@ -112,7 +113,8 @@ class VDSS(VectorDB):
             # Create HnswConfig message
             hnsw_config = vdss_types_pb2.HnswConfig(
                 m=self.case_config.m,
-                ef_construct=self.case_config.ef_construction
+                ef_construct=self.case_config.ef_construction,
+                ef_search=self.case_config.ef_search
             )
             
             config = vdss_types_pb2.CollectionConfig(
@@ -161,12 +163,13 @@ class VDSS(VectorDB):
             >>>     self.insert_embeddings()
             >>>     self.search_embedding()
         """
-        # Create gRPC channel
+        # Create gRPC channel with larger message size limits
+        # For 768-dim vectors: 10000 vectors ≈ 30MB, 50000 vectors ≈ 150MB
         self.channel = grpc.insecure_channel(
             f'{self.grpc_host}:{self.grpc_port}',
             options=[
-                ('grpc.max_send_message_length', 100 * 1024 * 1024),  # 100MB
-                ('grpc.max_receive_message_length', 100 * 1024 * 1024),  # 100MB
+                ('grpc.max_send_message_length', 500 * 1024 * 1024),  # 500MB
+                ('grpc.max_receive_message_length', 500 * 1024 * 1024),  # 500MB
             ]
         )
         self.stub = vdss_service_pb2_grpc.VDSSServiceStub(self.channel)

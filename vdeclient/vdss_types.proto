@@ -25,6 +25,7 @@ message Payload {
 message HnswConfig {
     uint32 m = 1;                // Number of edges per node in the index graph
     uint32 ef_construct = 2;     // Number of neighbours to consider during index building
+    uint32 ef_search = 3;        // Number of neighbours to consider during search
 }
 
 enum IndexAlgorithm {

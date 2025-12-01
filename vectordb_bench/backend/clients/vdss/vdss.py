@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 import time
 from contextlib import contextmanager
 from typing import Any
@@ -62,7 +63,9 @@ class VDSS(VectorDB):
         self.dim = dim
         self.with_scalar_labels = with_scalar_labels
         
-        self.batch_size = 500  # VDSS batch size
+        # Get batch size from NUM_PER_BATCH environment variable, default to 100000
+        self.batch_size = int(os.environ.get('NUM_PER_BATCH', 100000))
+        log.info(f"VDSS batch_size set to: {self.batch_size}")
         
         self._primary_field = "pk"
         self._scalar_id_field = "id"

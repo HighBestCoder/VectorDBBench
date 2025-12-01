@@ -22,13 +22,38 @@ message Payload {
     string json = 1;             // Payload in JSON format
 }
 
+message HnswConfig {
+    uint32 m = 1;                // Number of edges per node in the index graph
+    uint32 ef_construct = 2;     // Number of neighbours to consider during index building
+}
+
+enum IndexAlgorithm {
+    HNSW = 0;
+}
+
+enum IndexDriver {
+    FAISS = 0;
+}
+
+enum StorageType {
+    ZENDB = 0;
+}
+
+enum DistanceMetric {
+    COSINE = 0;
+    EUCLIDEAN = 1;
+    DOT = 2;
+}
+
 // Collection configuration (matching VDECollectionConfig)
 message CollectionConfig {
-    string index_type = 1;       // "vsag_hnsw", "vsag_hgraph", etc.
-    string storage_type = 2;     // "zendb", "lmdb", etc.
-    uint32 dimension = 3;        // Vector dimension
-    string distance_metric = 4;  // "cosine", "euclidean", "dot"
-    string config_json = 5;      // Driver-specific config (JSON format)
+    IndexDriver index_driver = 1;        // Currently only "FAISS" is supported.
+    IndexAlgorithm index_algorithm = 2;  // Currently only "HNSW" is supported.
+    StorageType storage_type = 3;        // Currently "ZENDB" is supported.
+    uint32 dimension = 4;                // Vector dimension
+    DistanceMetric distance_metric = 5;  // One of { "COSINE", "EUCLIDEAN", "DOT" }
+    string config_json = 6;              // Driver-specific config (JSON format)
+    optional HnswConfig hnsw_config = 7; // HNSW specific configuration
 }
 
 // Search result (matching VDESearchResult)

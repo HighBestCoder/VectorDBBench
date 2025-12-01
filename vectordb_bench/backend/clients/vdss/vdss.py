@@ -96,22 +96,30 @@ class VDSS(VectorDB):
                 except Exception as e:
                     log.debug(f"Collection deletion failed (may not exist): {e}")
             
-            # Create collection configuration matching test_vdss_simple.py
+            # Create collection configuration with enum types
             config_json_dict = {
                 "dtype": "float32",
-                "metric_type": self.case_config.parse_metric(),
+                "metric_type": self.case_config.parse_metric_string(),
                 "hnsw": {
                     "max_degree": self.case_config.m,
                     "ef_construction": self.case_config.ef_construction,
                 }
             }
             
+            # Create HnswConfig message
+            hnsw_config = vdss_types_pb2.HnswConfig(
+                m=self.case_config.m,
+                ef_construct=self.case_config.ef_construction
+            )
+            
             config = vdss_types_pb2.CollectionConfig(
-                index_type=self.case_config.parse_index_type(),
-                storage_type=self.case_config.storage_type,
+                index_driver=vdss_types_pb2.IndexDriver.FAISS,
+                index_algorithm=self.case_config.parse_index_algorithm(),
+                storage_type=vdss_types_pb2.StorageType.ZENDB,
                 dimension=dim,
                 distance_metric=self.case_config.parse_metric(),
                 config_json=json.dumps(config_json_dict),
+                hnsw_config=hnsw_config,
             )
             
             # Create collection

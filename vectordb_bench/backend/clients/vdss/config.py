@@ -40,8 +40,25 @@ class VDSSIndexConfig(BaseModel, DBCaseConfig):
     # Additional driver-specific config (JSON format)
     config_json: str = "{}"
     
-    def parse_metric(self) -> str:
-        """Convert MetricType to VDSS distance metric string"""
+    def parse_metric(self) -> int:
+        """Convert MetricType to VDSS DistanceMetric enum value"""
+        # Import here to avoid circular dependency
+        import sys
+        from pathlib import Path
+        vdeclient_path = Path(__file__).parent.parent.parent.parent.parent / "vdeclient"
+        sys.path.insert(0, str(vdeclient_path))
+        import vdss_types_pb2
+        
+        if self.metric_type == MetricType.L2:
+            return vdss_types_pb2.DistanceMetric.EUCLIDEAN
+        elif self.metric_type == MetricType.COSINE:
+            return vdss_types_pb2.DistanceMetric.COSINE
+        elif self.metric_type == MetricType.IP:
+            return vdss_types_pb2.DistanceMetric.DOT
+        return vdss_types_pb2.DistanceMetric.EUCLIDEAN
+    
+    def parse_metric_string(self) -> str:
+        """Convert MetricType to metric string for config_json"""
         if self.metric_type == MetricType.L2:
             return "l2"
         elif self.metric_type == MetricType.COSINE:
@@ -50,13 +67,20 @@ class VDSSIndexConfig(BaseModel, DBCaseConfig):
             return "dot"
         return "l2"
     
-    def parse_index_type(self) -> str:
-        """Convert IndexType to VDSS index type string"""
+    def parse_index_algorithm(self) -> int:
+        """Convert IndexType to VDSS IndexAlgorithm enum value"""
+        # Import here to avoid circular dependency
+        import sys
+        from pathlib import Path
+        vdeclient_path = Path(__file__).parent.parent.parent.parent.parent / "vdeclient"
+        sys.path.insert(0, str(vdeclient_path))
+        import vdss_types_pb2
+        
         if self.index_type == IndexType.HNSW:
-            return "hnsw"
+            return vdss_types_pb2.IndexAlgorithm.HNSW
         elif self.index_type in [IndexType.Hologres_HGraph]:
-            return "hgraph"
-        return "hnsw"
+            return vdss_types_pb2.IndexAlgorithm.HNSW  # Only HNSW supported for now
+        return vdss_types_pb2.IndexAlgorithm.HNSW
     
     def index_param(self) -> dict:
         """Return index building parameters"""

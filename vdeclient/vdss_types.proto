@@ -38,6 +38,7 @@ enum IndexDriver {
 
 enum StorageType {
     ZENDB = 0;
+    MEM = 1;  // In-memory storage (for testing)
 }
 
 enum DistanceMetric {
@@ -50,7 +51,7 @@ enum DistanceMetric {
 message CollectionConfig {
     IndexDriver index_driver = 1;        // Currently only "FAISS" is supported.
     IndexAlgorithm index_algorithm = 2;  // Currently only "HNSW" is supported.
-    StorageType storage_type = 3;        // Currently "ZENDB" is supported.
+    StorageType storage_type = 3;        // "ZENDB" or "MEM" (memory-only for testing)
     uint32 dimension = 4;                // Vector dimension
     DistanceMetric distance_metric = 5;  // One of { "COSINE", "EUCLIDEAN", "DOT" }
     string config_json = 6;              // Driver-specific config (JSON format)

@@ -64,6 +64,14 @@ class FaissTypedDict(CommonTypedDict, HNSWFlavor3):
             help="Absolute path to libfaissclient.so (auto-detected otherwise)",
         ),
     ]
+    index_dir: Annotated[
+        str | None,
+        click.option(
+            "--index-dir",
+            type=str,
+            help="Directory used to persist local FAISS indexes between processes",
+        ),
+    ]
 
 
 @click.command(name="faiss")
@@ -82,6 +90,7 @@ def FaissCli(**parameters: Unpack[FaissTypedDict]):
             num_threads=parameters["num_threads"],
             faiss_root=parameters.get("faiss_root"),
             client_library=parameters.get("client_library"),
+            index_dir=parameters.get("index_dir"),
         ),
         db_case_config=FaissIndexConfig(
             metric_type=metric_type,

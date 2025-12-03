@@ -2,6 +2,7 @@
 
 #include <faiss/IndexHNSW.h>
 #include <faiss/IndexIDMap.h>
+#include <faiss/index_io.h>
 #include <omp.h>
 
 #include <memory>
@@ -13,6 +14,7 @@ struct FaissClientHandleImpl {
     std::unique_ptr<faiss::IndexIDMap> index;
     faiss::IndexHNSW* hnsw_index{nullptr};
     int dim{0};
+    int m{0};
     int ef_search{0};
     FaissMetricKind metric_kind{FAISS_METRIC_L2};
     std::string last_error;
@@ -45,6 +47,7 @@ extern "C" FaissClientHandle* faiss_client_create(
     try {
         auto impl = std::make_unique<FaissClientHandleImpl>();
         impl->dim = dim;
+        impl->m = m;
         impl->ef_search = ef_search;
         impl->metric_kind = metric_type;
 
@@ -133,6 +136,50 @@ extern "C" int faiss_client_optimize(FaissClientHandle* handle) {
     return 0;
 }
 
+extern "C" int faiss_client_save_index(FaissClientHandle* handle, const char* path) {
+    if (handle == nullptr || path == nullptr) {
+        return -1;
+    }
+    auto* impl = reinterpret_cast<FaissClientHandleImpl*>(handle);
+    try {
+        faiss::write_index(impl->index.get(), path);
+        return 0;
+    } catch (const std::exception& ex) {
+        store_error(handle, ex.what());
+        return -1;
+    }
+}
+
+extern "C" int faiss_client_load_index(FaissClientHandle* handle, const char* path) {
+    if (handle == nullptr || path == nullptr) {
+        return -1;
+    }
+    auto* impl = reinterpret_cast<FaissClientHandleImpl*>(handle);
+    try {
+        std::unique_ptr<faiss::Index> loaded(faiss::read_index(path));
+        faiss::IndexIDMap* id_map = dynamic_cast<faiss::IndexIDMap*>(loaded.get());
+        std::unique_ptr<faiss::IndexIDMap> new_index;
+        if (id_map != nullptr) {
+            loaded.release();
+            new_index.reset(id_map);
+        } else {
+            auto tmp = std::make_unique<faiss::IndexIDMap>(loaded.release());
+            tmp->own_fields = true;
+            new_index = std::move(tmp);
+        }
+        impl->hnsw_index = dynamic_cast<faiss::IndexHNSW*>(new_index->index);
+        if (auto* hnsw = impl->hnsw_index) {
+            impl->ef_search = hnsw->hnsw.efSearch;
+            impl->m = hnsw->hnsw.nb_neighbors(0);
+        }
+        impl->index = std::move(new_index);
+        return 0;
+    } catch (const std::exception& ex) {
+        store_error(handle, ex.what());
+        return -1;
+    }
+}
+
 extern "C" int faiss_client_set_ef_search(FaissClientHandle* handle, int ef_search) {
     if (handle == nullptr) {
         return -1;
@@ -144,6 +191,24 @@ extern "C" int faiss_client_set_ef_search(FaissClientHandle* handle, int ef_sear
     try {
         impl->hnsw_index->hnsw.efSearch = ef_search;
         impl->ef_search = ef_search;
+        return 0;
+    } catch (const std::exception& ex) {
+        store_error(handle, ex.what());
+        return -1;
+    }
+}
+
+extern "C" int faiss_client_get_info(FaissClientHandle* handle, FaissClientInfo* info_out) {
+    if (handle == nullptr || info_out == nullptr) {
+        return -1;
+    }
+    auto* impl = reinterpret_cast<FaissClientHandleImpl*>(handle);
+    try {
+        info_out->dim = impl->dim;
+        info_out->m = impl->m;
+        info_out->ef_search = impl->hnsw_index ? impl->hnsw_index->hnsw.efSearch : impl->ef_search;
+        info_out->metric_kind = static_cast<int>(impl->metric_kind);
+        info_out->ntotal = impl->index ? static_cast<std::size_t>(impl->index->ntotal) : 0;
         return 0;
     } catch (const std::exception& ex) {
         store_error(handle, ex.what());

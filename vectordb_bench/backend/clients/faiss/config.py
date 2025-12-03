@@ -12,6 +12,7 @@ class FaissConfig(DBConfig):
     client_library: str | None = None
     batch_size: int = 20000
     num_threads: int = 0
+    index_dir: str | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -19,6 +20,7 @@ class FaissConfig(DBConfig):
             "client_library": self.client_library,
             "batch_size": self.batch_size,
             "num_threads": self.num_threads,
+            "index_dir": self.index_dir,
         }
 
 

@@ -4,6 +4,8 @@ import ctypes
 import os
 from ctypes import (
     POINTER,
+    Structure,
+    byref,
     c_char_p,
     c_float,
     c_int,
@@ -24,6 +26,16 @@ class MetricKind(IntEnum):
 
 class FaissNativeError(RuntimeError):
     pass
+
+
+class _FaissClientInfo(Structure):
+    _fields_ = [
+        ("ntotal", c_size_t),
+        ("dim", c_int),
+        ("m", c_int),
+        ("ef_search", c_int),
+        ("metric_kind", c_int),
+    ]
 
 
 def _default_faiss_root() -> Path:
@@ -94,8 +106,17 @@ def _load_native_library(
 
     lib.faiss_client_set_num_threads.argtypes = [c_int]
 
+    lib.faiss_client_save_index.argtypes = [c_void_p, c_char_p]
+    lib.faiss_client_save_index.restype = c_int
+
+    lib.faiss_client_load_index.argtypes = [c_void_p, c_char_p]
+    lib.faiss_client_load_index.restype = c_int
+
     lib.faiss_client_get_last_error.argtypes = [c_void_p]
     lib.faiss_client_get_last_error.restype = c_char_p
+
+    lib.faiss_client_get_info.argtypes = [c_void_p, POINTER(_FaissClientInfo)]
+    lib.faiss_client_get_info.restype = c_int
 
     _LIB_CACHE[cache_key] = lib
     return lib
@@ -136,6 +157,25 @@ class FaissNativeClient:
 
     def optimize(self) -> None:
         self._check(self._lib.faiss_client_optimize(self._handle))
+
+    def save(self, path: os.PathLike[str] | str) -> None:
+        path_bytes = os.fsencode(path)
+        self._check(self._lib.faiss_client_save_index(self._handle, path_bytes))
+
+    def load(self, path: os.PathLike[str] | str) -> None:
+        path_bytes = os.fsencode(path)
+        self._check(self._lib.faiss_client_load_index(self._handle, path_bytes))
+
+    def info(self) -> dict:
+        info = _FaissClientInfo()
+        self._check(self._lib.faiss_client_get_info(self._handle, byref(info)))
+        return {
+            "ntotal": int(info.ntotal),
+            "dim": info.dim,
+            "m": info.m,
+            "ef_search": info.ef_search,
+            "metric_kind": info.metric_kind,
+        }
 
     def add(self, embeddings: np.ndarray, ids: np.ndarray) -> int:
         vecs = np.ascontiguousarray(embeddings, dtype=np.float32)

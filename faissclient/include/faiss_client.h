@@ -12,6 +12,14 @@ extern "C" {
  */
 typedef struct FaissClientHandle FaissClientHandle;
 
+typedef struct FaissClientInfo {
+    std::size_t ntotal;
+    int dim;
+    int m;
+    int ef_search;
+    int metric_kind;
+} FaissClientInfo;
+
 /** Supported metric kinds for the FAISS client. */
 typedef enum FaissMetricKind {
     FAISS_METRIC_L2 = 0,
@@ -51,6 +59,9 @@ int faiss_client_search(
 int faiss_client_reset(FaissClientHandle* handle);
 int faiss_client_optimize(FaissClientHandle* handle);
 int faiss_client_set_ef_search(FaissClientHandle* handle, int ef_search);
+int faiss_client_save_index(FaissClientHandle* handle, const char* path);
+int faiss_client_load_index(FaissClientHandle* handle, const char* path);
+int faiss_client_get_info(FaissClientHandle* handle, FaissClientInfo* info_out);
 
 /** Sets the global FAISS OpenMP thread pool size. */
 void faiss_client_set_num_threads(int threads);

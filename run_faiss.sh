@@ -1,5 +1,7 @@
 #!/bin/bash
 
+apt update && apt install -y libgomp1
+
 NUM_PER_BATCH=10000 vectordbbench faiss \
   --case-type Performance768D1M \
   --metric-type COSINE \

@@ -4,6 +4,7 @@ from ..backend.clients.aws_opensearch.cli import AWSOpenSearch
 from ..backend.clients.clickhouse.cli import Clickhouse
 from ..backend.clients.cockroachdb.cli import CockroachDB as CockroachDBCli
 from ..backend.clients.doris.cli import Doris
+from ..backend.clients.faiss.cli import FaissCli
 from ..backend.clients.hologres.cli import HologresHGraph
 from ..backend.clients.lancedb.cli import LanceDB
 from ..backend.clients.mariadb.cli import MariaDBHNSW
@@ -60,6 +61,7 @@ cli.add_command(TencentElasticsearch)
 cli.add_command(AliSQLHNSW)
 cli.add_command(Doris)
 cli.add_command(VDSSHnsw)
+cli.add_command(FaissCli)
 
 
 if __name__ == "__main__":

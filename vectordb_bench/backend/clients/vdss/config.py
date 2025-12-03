@@ -35,10 +35,27 @@ class VDSSIndexConfig(BaseModel, DBCaseConfig):
     ef_search: int = 100
     
     # Storage configuration
-    storage_type: str = "zendb"  # "zendb", "lmdb", etc.
+    storage_type: str = "zendb"  # "zendb", "mem", etc.
     
     # Additional driver-specific config (JSON format)
     config_json: str = "{}"
+    
+    def parse_storage_type(self) -> int:
+        """Convert storage_type string to VDSS StorageType enum value"""
+        # Import here to avoid circular dependency
+        import sys
+        from pathlib import Path
+        vdeclient_path = Path(__file__).parent.parent.parent.parent.parent / "vdeclient"
+        sys.path.insert(0, str(vdeclient_path))
+        import vdss_types_pb2
+        
+        storage_lower = self.storage_type.lower()
+        if storage_lower == "zendb":
+            return vdss_types_pb2.StorageType.ZENDB
+        elif storage_lower == "mem" or storage_lower == "memory":
+            return vdss_types_pb2.StorageType.MEM
+        # Default to ZENDB
+        return vdss_types_pb2.StorageType.ZENDB
     
     def parse_metric(self) -> int:
         """Convert MetricType to VDSS DistanceMetric enum value"""

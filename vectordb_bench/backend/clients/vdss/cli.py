@@ -84,7 +84,7 @@ class VDSSTypedDict(CommonTypedDict):
         click.option(
             "--storage-type",
             type=str,
-            help="Storage type (zendb, lmdb, etc.)",
+            help="Storage type (zendb, mem)",
             default="zendb",
             show_default=True,
         ),

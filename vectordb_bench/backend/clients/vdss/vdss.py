@@ -120,7 +120,7 @@ class VDSS(VectorDB):
             config = vdss_types_pb2.CollectionConfig(
                 index_driver=vdss_types_pb2.IndexDriver.FAISS,
                 index_algorithm=self.case_config.parse_index_algorithm(),
-                storage_type=vdss_types_pb2.StorageType.ZENDB,
+                storage_type=self.case_config.parse_storage_type(),
                 dimension=dim,
                 distance_metric=self.case_config.parse_metric(),
                 config_json=json.dumps(config_json_dict),

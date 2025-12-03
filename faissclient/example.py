@@ -346,11 +346,14 @@ def main():
             # 自动保存索引（如果没有指定 save_index 且没有使用 auto_index_path）
             if not auto_index_path:
                 if args.save_index:
-                    save_path = args.save_index
+                    save_path = pathlib.Path(args.save_index)
                 else:
                     # 使用默认文件名
                     save_filename = f"faiss_index_m{args.m}_efc{args.ef_construction}.index"
                     save_path = dataset_dir.parent / save_filename
+                
+                # 确保目录存在
+                save_path.parent.mkdir(parents=True, exist_ok=True)
                 
                 print(f"Saving index to {save_path}...")
                 save_start = time.time()

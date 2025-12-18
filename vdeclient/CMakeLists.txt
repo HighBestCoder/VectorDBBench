@@ -90,6 +90,12 @@ add_library(vdss_proto STATIC
     ${VDSS_GRPC_SRCS}
 )
 
+# TODO(juexu): This is caused by protoc version mismatch. Once we fixed
+# the version issue, we can re-enable the warnings.
+target_compile_options(vdss_proto PRIVATE
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-Wno-deprecated-declarations>
+)
+
 # Include directories
 target_include_directories(vdss_proto PUBLIC
     ${VDSS_PROTO_GENERATED_DIR}

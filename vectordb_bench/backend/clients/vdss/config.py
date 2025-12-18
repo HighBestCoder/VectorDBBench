@@ -35,69 +35,28 @@ class VDSSIndexConfig(BaseModel, DBCaseConfig):
     ef_search: int = 100
     
     # Storage configuration
-    storage_type: str = "zendb"  # "zendb", "mem", etc.
+    storage_type: str = "zendb"  # "zendb", "lmdb", etc.
     
     # Additional driver-specific config (JSON format)
     config_json: str = "{}"
     
-    def parse_storage_type(self) -> int:
-        """Convert storage_type string to VDSS StorageType enum value"""
-        # Import here to avoid circular dependency
-        import sys
-        from pathlib import Path
-        vdeclient_path = Path(__file__).parent.parent.parent.parent.parent / "vdeclient"
-        sys.path.insert(0, str(vdeclient_path))
-        import vdss_types_pb2
-        
-        storage_lower = self.storage_type.lower()
-        if storage_lower == "zendb":
-            return vdss_types_pb2.StorageType.ZENDB
-        elif storage_lower == "mem" or storage_lower == "memory":
-            return vdss_types_pb2.StorageType.MEM
-        # Default to ZENDB
-        return vdss_types_pb2.StorageType.ZENDB
-    
-    def parse_metric(self) -> int:
-        """Convert MetricType to VDSS DistanceMetric enum value"""
-        # Import here to avoid circular dependency
-        import sys
-        from pathlib import Path
-        vdeclient_path = Path(__file__).parent.parent.parent.parent.parent / "vdeclient"
-        sys.path.insert(0, str(vdeclient_path))
-        import vdss_types_pb2
-        
+    def parse_metric(self) -> str:
+        """Convert MetricType to VDSS distance metric string"""
         if self.metric_type == MetricType.L2:
-            return vdss_types_pb2.DistanceMetric.EUCLIDEAN
-        elif self.metric_type == MetricType.COSINE:
-            return vdss_types_pb2.DistanceMetric.COSINE
-        elif self.metric_type == MetricType.IP:
-            return vdss_types_pb2.DistanceMetric.DOT
-        return vdss_types_pb2.DistanceMetric.EUCLIDEAN
-    
-    def parse_metric_string(self) -> str:
-        """Convert MetricType to metric string for config_json"""
-        if self.metric_type == MetricType.L2:
-            return "l2"
+            return "euclidean"
         elif self.metric_type == MetricType.COSINE:
             return "cosine"
         elif self.metric_type == MetricType.IP:
             return "dot"
-        return "l2"
+        return "cosine"
     
-    def parse_index_algorithm(self) -> int:
-        """Convert IndexType to VDSS IndexAlgorithm enum value"""
-        # Import here to avoid circular dependency
-        import sys
-        from pathlib import Path
-        vdeclient_path = Path(__file__).parent.parent.parent.parent.parent / "vdeclient"
-        sys.path.insert(0, str(vdeclient_path))
-        import vdss_types_pb2
-        
+    def parse_index_type(self) -> str:
+        """Convert IndexType to VDSS index type string"""
         if self.index_type == IndexType.HNSW:
-            return vdss_types_pb2.IndexAlgorithm.HNSW
+            return "vsag_hnsw"
         elif self.index_type in [IndexType.Hologres_HGraph]:
-            return vdss_types_pb2.IndexAlgorithm.HNSW  # Only HNSW supported for now
-        return vdss_types_pb2.IndexAlgorithm.HNSW
+            return "vsag_hgraph"
+        return "vsag_hnsw"
     
     def index_param(self) -> dict:
         """Return index building parameters"""

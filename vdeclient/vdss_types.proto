@@ -11,6 +11,14 @@ syntax = "proto3";
 
 package vdss;
 
+// Vector Identifier
+message VectorIdentifier {
+    oneof id {
+        uint64 offset = 1;
+        string uuid = 2;
+    }
+}
+
 // Vector data
 message Vector {
     repeated float data = 1;     // Vector values
@@ -39,6 +47,7 @@ enum IndexDriver {
 enum StorageType {
     ZENDB = 0;
     MEM = 1;  // In-memory storage (for testing)
+    BTRIEVE_SPACE = 2;
 }
 
 enum DistanceMetric {
@@ -60,7 +69,7 @@ message CollectionConfig {
 
 // Search result (matching VDESearchResult)
 message SearchResult {
-    uint64 offset = 1;           // PointOffset (internal ID)
+    VectorIdentifier id = 1;     // Vector identifier
     float score = 2;             // Similarity score
 }
 

@@ -1,11 +1,11 @@
-# 构建阶段
+# Build stage
 FROM python:3.11-bullseye AS builder-image
 
-# 设置时区（避免证书验证问题）
+# Set timezone (avoid certificate verification issues)
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Asia/Shanghai" > /etc/timezone
 
-# 更换清华源并更新依赖
+# Replace with Tsinghua mirror and update dependencies
 RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list \
     && sed -i 's/security.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list \
     && apt-get update \
@@ -19,7 +19,7 @@ RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.li
     && apt-get install -y --no-install-recommends libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# 安装 Python 依赖
+# Install Python dependencies
 WORKDIR /opt/code
 COPY install/requirements_py3.11.txt install/requirements_py3.11.txt
 RUN pip3 install --no-cache-dir -U pip \
@@ -36,22 +36,22 @@ RUN rm -rf faissclient/build \
     && cmake -S faissclient -B faissclient/build -DFAISS_ROOT=${FAISS_ROOT}
 RUN cmake --build faissclient/build --config Release
 
-# 最终运行阶段
+# Final runtime stage
 FROM python:3.11-slim-bullseye
 
-# 安全加固：创建非 root 用户
+# Security hardening: create non-root user
 RUN useradd -m appuser && chown -R appuser /usr/local/lib/python3.11/site-packages
 
-# 从构建阶段复制依赖
+# Copy dependencies from build stage
 COPY --from=builder-image /usr/local/bin /usr/local/bin
 COPY --from=builder-image /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder-image /data /data
 
-# 设置工作环境
+# Set working environment
 WORKDIR /opt/code
 COPY --chown=appuser . .
 
-# 环境变量配置
+# Environment variable configuration
 ENV PYTHONPATH=/opt/code \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -59,7 +59,7 @@ ENV PYTHONPATH=/opt/code \
     FAISS_ROOT=/data/third-party/faiss/linux-x64 \
     LD_LIBRARY_PATH=/opt/code/faissclient/lib:/data/third-party/faiss/linux-x64/lib:$LD_LIBRARY_PATH
 
-# 安装 VectorDBBench 包（这会注册 vectordbbench 命令）
+# Install VectorDBBench package (this will register vectordbbench command)
 RUN pip3 install --no-cache-dir -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 COPY --from=builder-image /opt/code/faissclient/lib/libfaissclient.so /opt/code/faissclient/lib/libfaissclient.so

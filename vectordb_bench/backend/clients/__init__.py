@@ -57,7 +57,6 @@ class DB(Enum):
     Doris = "Doris"
     TurboPuffer = "TurpoBuffer"
     VDSS = "VDSS"
-    FAISS = "FAISS"
 
     @property
     def init_cls(self) -> type[VectorDB]:  # noqa: PLR0911, PLR0912, C901, PLR0915
@@ -234,11 +233,6 @@ class DB(Enum):
             from .vdss.vdss import VDSS
 
             return VDSS
-
-        if self == DB.FAISS:
-            from .faiss.faiss import Faiss
-
-            return Faiss
 
         msg = f"Unknown DB: {self.name}"
         raise ValueError(msg)
@@ -419,11 +413,6 @@ class DB(Enum):
 
             return VDSSConfig
 
-        if self == DB.FAISS:
-            from .faiss.config import FaissConfig
-
-            return FaissConfig
-
         msg = f"Unknown DB: {self.name}"
         raise ValueError(msg)
 
@@ -577,11 +566,6 @@ class DB(Enum):
             from .vdss.config import VDSSIndexConfig
 
             return VDSSIndexConfig
-
-        if self == DB.FAISS:
-            from .faiss.config import FaissIndexConfig
-
-            return FaissIndexConfig
 
         # DB.Pinecone, DB.Chroma, DB.Redis
         return EmptyDBCaseConfig

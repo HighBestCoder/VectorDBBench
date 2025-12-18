@@ -84,7 +84,7 @@ class VDSSTypedDict(CommonTypedDict):
         click.option(
             "--storage-type",
             type=str,
-            help="Storage type (zendb, mem)",
+            help="Storage type (zendb, lmdb, etc.)",
             default="zendb",
             show_default=True,
         ),
@@ -99,7 +99,10 @@ def VDSSHnsw(**parameters: Unpack[VDSSTypedDict]):
     from vectordb_bench.backend.clients.api import IndexType
 
     # Get custom case config if provided
-    parameters["custom_case"] = get_custom_case_config(parameters)
+    parameters["custom_case"] = get_custom_case_config(
+        parameters.get("custom_case_name"),
+        parameters.get("custom_case_dataset_name"),
+    )
 
     api_key_value = parameters["api_key"]
     

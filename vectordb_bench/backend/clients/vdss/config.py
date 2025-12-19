@@ -29,34 +29,52 @@ class VDSSIndexConfig(BaseModel, DBCaseConfig):
     metric_type: MetricType | None = None
     index_type: IndexType = IndexType.HNSW
     
-    # HNSW/HGraph parameters
+    # HNSW parameters
     m: int = 16
     ef_construction: int = 200
     ef_search: int = 100
     
-    # Storage configuration
-    storage_type: str = "zendb"  # "zendb", "lmdb", etc.
+    # Storage configuration - use enum value
+    storage_type: str = "ZENDB"  # "ZENDB", "MEM", "BTRIEVE_SPACE"
     
-    # Additional driver-specific config (JSON format)
-    config_json: str = "{}"
+    # Index driver and algorithm
+    index_driver: str = "FAISS"  # Currently only FAISS is supported
+    index_algorithm: str = "HNSW"  # Currently only HNSW is supported
     
-    def parse_metric(self) -> str:
-        """Convert MetricType to VDSS distance metric string"""
+    def parse_metric(self) -> int:
+        """Convert MetricType to VDSS DistanceMetric enum value"""
+        # Import at runtime to avoid circular dependency
+        import sys
+        from pathlib import Path
+        vdeclient_path = Path(__file__).parent.parent.parent.parent.parent / "vdeclient"
+        if str(vdeclient_path) not in sys.path:
+            sys.path.insert(0, str(vdeclient_path))
+        import vdss_types_pb2
+        
         if self.metric_type == MetricType.L2:
-            return "euclidean"
+            return vdss_types_pb2.EUCLIDEAN
         elif self.metric_type == MetricType.COSINE:
-            return "cosine"
+            return vdss_types_pb2.COSINE
         elif self.metric_type == MetricType.IP:
-            return "dot"
-        return "cosine"
+            return vdss_types_pb2.DOT
+        return vdss_types_pb2.COSINE
     
-    def parse_index_type(self) -> str:
-        """Convert IndexType to VDSS index type string"""
-        if self.index_type == IndexType.HNSW:
-            return "vsag_hnsw"
-        elif self.index_type in [IndexType.Hologres_HGraph]:
-            return "vsag_hgraph"
-        return "vsag_hnsw"
+    def parse_storage_type(self) -> int:
+        """Convert storage type string to enum value"""
+        import sys
+        from pathlib import Path
+        vdeclient_path = Path(__file__).parent.parent.parent.parent.parent / "vdeclient"
+        if str(vdeclient_path) not in sys.path:
+            sys.path.insert(0, str(vdeclient_path))
+        import vdss_types_pb2
+        
+        if self.storage_type.upper() == "ZENDB":
+            return vdss_types_pb2.ZENDB
+        elif self.storage_type.upper() == "MEM":
+            return vdss_types_pb2.MEM
+        elif self.storage_type.upper() == "BTRIEVE_SPACE":
+            return vdss_types_pb2.BTRIEVE_SPACE
+        return vdss_types_pb2.ZENDB
     
     def index_param(self) -> dict:
         """Return index building parameters"""

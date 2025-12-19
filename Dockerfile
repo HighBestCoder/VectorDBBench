@@ -29,13 +29,6 @@ COPY . .
 RUN mkdir -p /data \
     && cp -r third-party /data/
 
-ENV FAISS_ROOT=/data/third-party/faiss/linux-x64
-
-# Remove any host-generated cache before configuring to avoid path mismatches
-RUN rm -rf faissclient/build \
-    && cmake -S faissclient -B faissclient/build -DFAISS_ROOT=${FAISS_ROOT}
-RUN cmake --build faissclient/build --config Release
-
 # Final runtime stage
 FROM python:3.11-slim-bullseye
 
@@ -62,6 +55,5 @@ ENV PYTHONPATH=/opt/code \
 # Install VectorDBBench package (this will register vectordbbench command)
 RUN pip3 install --no-cache-dir -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-COPY --from=builder-image /opt/code/faissclient/lib/libfaissclient.so /opt/code/faissclient/lib/libfaissclient.so
 
 RUN cd vdeclient && python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. vdss_types.proto vdss_service.proto

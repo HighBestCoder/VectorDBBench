@@ -96,18 +96,22 @@ class VDSS(VectorDB):
                 except Exception as e:
                     log.debug(f"Collection deletion failed (may not exist): {e}")
             
-            # Create collection configuration
-            index_config = {
-                "m": self.case_config.m,
-                "ef_construction": self.case_config.ef_construction,
-            }
+            # Create HNSW configuration
+            hnsw_config = vdss_types_pb2.HnswConfig(
+                m=self.case_config.m,
+                ef_construct=self.case_config.ef_construction,
+                ef_search=self.case_config.ef_search,
+            )
             
+            # Create collection configuration with new proto structure
             config = vdss_types_pb2.CollectionConfig(
-                index_type=self.case_config.parse_index_type(),
-                storage_type=self.case_config.storage_type,
+                index_driver=vdss_types_pb2.FAISS,  # Currently only FAISS supported
+                index_algorithm=vdss_types_pb2.HNSW,  # Currently only HNSW supported
+                storage_type=self.case_config.parse_storage_type(),
                 dimension=dim,
                 distance_metric=self.case_config.parse_metric(),
-                config_json=json.dumps(index_config),
+                config_json="{}",  # Reserved for future use
+                hnsw_config=hnsw_config,
             )
             
             # Create collection
@@ -298,29 +302,34 @@ class VDSS(VectorDB):
                 dimension=len(query)
             )
             
-            # Choose appropriate search method based on filter
+            # Use unified Search API with optional filter
+            request = vdss_service_pb2.SearchRequest(
+                collection_name=self.collection_name,
+                query=query_vector,
+                top_k=k
+            )
+            
+            # Add filter if present (using optional field)
             if self.filter_json:
-                request = vdss_service_pb2.SearchFilteredRequest(
-                    collection_name=self.collection_name,
-                    query=query_vector,
-                    top_k=k,
-                    filter_json=self.filter_json
-                )
-                response = self.stub.SearchFiltered(request)
-            else:
-                request = vdss_service_pb2.SearchRequest(
-                    collection_name=self.collection_name,
-                    query=query_vector,
-                    top_k=k
-                )
-                response = self.stub.Search(request)
+                request.filter_json = self.filter_json
+            
+            response = self.stub.Search(request)
             
             if response.status.code != 0:
                 log.error(f"Search failed: {response.status.message}")
                 return []
             
-            # Extract offsets from results
-            result_ids = [result.offset for result in response.results]
+            # Extract IDs from results (handle VectorIdentifier union type)
+            result_ids = []
+            for result in response.results:
+                # VectorIdentifier is a oneof field, check which type it is
+                if result.id.HasField('offset'):
+                    result_ids.append(result.id.offset)
+                elif result.id.HasField('uuid'):
+                    # If using UUID, we might need to map it back to offset
+                    # For now, log a warning as benchmarks expect numeric IDs
+                    log.warning(f"Received UUID result: {result.id.uuid}, skipping")
+            
             return result_ids
             
         except Exception as e:

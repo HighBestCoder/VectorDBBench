@@ -1,0 +1,294 @@
+// ============================================================================
+// VDSS Service Definition - Based on VDE C API (vde.h)
+// ============================================================================
+
+syntax = "proto3";
+
+package vdss;
+
+import "vdss_types.proto";
+
+service VDSSService {
+    // Collection Management
+    rpc CreateCollection(CreateCollectionRequest) returns (CreateCollectionResponse);
+    rpc OpenCollection(OpenCollectionRequest) returns (OpenCollectionResponse);
+    rpc CloseCollection(CloseCollectionRequest) returns (CloseCollectionResponse);
+    rpc DeleteCollection(DeleteCollectionRequest) returns (DeleteCollectionResponse);
+    
+    // Data Operations
+    rpc UpsertVector(UpsertVectorRequest) returns (UpsertVectorResponse);
+    rpc DeleteVector(DeleteVectorRequest) returns (DeleteVectorResponse);
+    rpc GetVector(GetVectorRequest) returns (GetVectorResponse);
+    
+    // Batch Operations
+    rpc BatchUpsert(BatchUpsertRequest) returns (BatchUpsertResponse);
+    rpc BatchDelete(BatchDeleteRequest) returns (BatchDeleteResponse);
+    
+    // Search Operations
+    rpc Search(SearchRequest) returns (SearchResponse);
+    rpc SearchFiltered(SearchFilteredRequest) returns (SearchFilteredResponse);
+    rpc SearchWithWhitelist(SearchWithWhitelistRequest) returns (SearchWithWhitelistResponse);
+    
+    // Payload Filtering
+    rpc FilterByPayload(FilterByPayloadRequest) returns (FilterByPayloadResponse);
+    
+    // Persistence
+    rpc SaveSnapshot(SaveSnapshotRequest) returns (SaveSnapshotResponse);
+    rpc LoadSnapshot(LoadSnapshotRequest) returns (LoadSnapshotResponse);
+    
+    // Status & Statistics
+    rpc GetState(GetStateRequest) returns (GetStateResponse);
+    rpc GetVectorCount(GetVectorCountRequest) returns (GetVectorCountResponse);
+    rpc GetStats(GetStatsRequest) returns (GetStatsResponse);
+    
+    // Maintenance
+    rpc Flush(FlushRequest) returns (FlushResponse);
+    rpc RebuildIndex(RebuildIndexRequest) returns (RebuildIndexResponse);
+    rpc Optimize(OptimizeRequest) returns (OptimizeResponse);
+    
+    // Health Check
+    rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// ============================================================================
+// Collection Management Messages
+// ============================================================================
+
+message CreateCollectionRequest {
+    string collection_name = 1;
+    CollectionConfig config = 2;
+}
+
+message CreateCollectionResponse {
+    Status status = 1;
+}
+
+message OpenCollectionRequest {
+    string collection_name = 1;
+}
+
+message OpenCollectionResponse {
+    Status status = 1;
+}
+
+message CloseCollectionRequest {
+    string collection_name = 1;
+}
+
+message CloseCollectionResponse {
+    Status status = 1;
+}
+
+message DeleteCollectionRequest {
+    string collection_name = 1;
+}
+
+message DeleteCollectionResponse {
+    Status status = 1;
+}
+
+// ============================================================================
+// Data Operation Messages
+// ============================================================================
+
+message UpsertVectorRequest {
+    string collection_name = 1;
+    uint64 offset = 2;
+    Vector vector = 3;
+    Payload payload = 4;
+}
+
+message UpsertVectorResponse {
+    Status status = 1;
+}
+
+message DeleteVectorRequest {
+    string collection_name = 1;
+    uint64 offset = 2;
+}
+
+message DeleteVectorResponse {
+    Status status = 1;
+}
+
+message GetVectorRequest {
+    string collection_name = 1;
+    uint64 offset = 2;
+}
+
+message GetVectorResponse {
+    Status status = 1;
+    Vector vector = 2;
+    Payload payload = 3;
+}
+
+// ============================================================================
+// Batch Operation Messages
+// ============================================================================
+
+message BatchUpsertRequest {
+    string collection_name = 1;
+    repeated uint64 offsets = 2;
+    repeated Vector vectors = 3;
+    repeated Payload payloads = 4;
+}
+
+message BatchUpsertResponse {
+    Status status = 1;
+}
+
+message BatchDeleteRequest {
+    string collection_name = 1;
+    repeated uint64 offsets = 2;
+}
+
+message BatchDeleteResponse {
+    Status status = 1;
+}
+
+// ============================================================================
+// Search Operation Messages
+// ============================================================================
+
+message SearchRequest {
+    string collection_name = 1;
+    Vector query = 2;
+    uint32 top_k = 3;
+}
+
+message SearchResponse {
+    Status status = 1;
+    repeated SearchResult results = 2;
+}
+
+message SearchFilteredRequest {
+    string collection_name = 1;
+    Vector query = 2;
+    uint32 top_k = 3;
+    string filter_json = 4;
+}
+
+message SearchFilteredResponse {
+    Status status = 1;
+    repeated SearchResult results = 2;
+}
+
+message SearchWithWhitelistRequest {
+    string collection_name = 1;
+    Vector query = 2;
+    uint32 top_k = 3;
+    repeated uint64 allowed_offsets = 4;
+}
+
+message SearchWithWhitelistResponse {
+    Status status = 1;
+    repeated SearchResult results = 2;
+}
+
+// ============================================================================
+// Payload Filtering Messages
+// ============================================================================
+
+message FilterByPayloadRequest {
+    string collection_name = 1;
+    string filter_json = 2;
+    uint32 max_count = 3;
+}
+
+message FilterByPayloadResponse {
+    Status status = 1;
+    repeated uint64 offsets = 2;
+}
+
+// ============================================================================
+// Persistence Messages
+// ============================================================================
+
+message SaveSnapshotRequest {
+    string collection_name = 1;
+}
+
+message SaveSnapshotResponse {
+    Status status = 1;
+}
+
+message LoadSnapshotRequest {
+    string collection_name = 1;
+}
+
+message LoadSnapshotResponse {
+    Status status = 1;
+}
+
+// ============================================================================
+// Status & Statistics Messages
+// ============================================================================
+
+message GetStateRequest {
+    string collection_name = 1;
+}
+
+message GetStateResponse {
+    Status status = 1;
+    CollectionState state = 2;
+}
+
+message GetVectorCountRequest {
+    string collection_name = 1;
+}
+
+message GetVectorCountResponse {
+    Status status = 1;
+    uint64 count = 2;
+}
+
+message GetStatsRequest {
+    string collection_name = 1;
+}
+
+message GetStatsResponse {
+    Status status = 1;
+    CollectionStats stats = 2;
+}
+
+// ============================================================================
+// Maintenance Messages
+// ============================================================================
+
+message FlushRequest {
+    string collection_name = 1;
+}
+
+message FlushResponse {
+    Status status = 1;
+}
+
+message RebuildIndexRequest {
+    string collection_name = 1;
+}
+
+message RebuildIndexResponse {
+    Status status = 1;
+}
+
+message OptimizeRequest {
+    string collection_name = 1;
+}
+
+message OptimizeResponse {
+    Status status = 1;
+}
+
+// ============================================================================
+// Health Check Messages
+// ============================================================================
+
+message HealthCheckRequest {
+    // Empty
+}
+
+message HealthCheckResponse {
+    Status status = 1;
+    string version = 2;
+    uint64 uptime_seconds = 3;
+}
